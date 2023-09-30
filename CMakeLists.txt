@@ -10,6 +10,7 @@ add_executable(CertificateSSL
         lib/PEM.cpp
         include/PemException.h
         lib/PemData.cpp
+        lib/RSATool.cpp
         )
 
 find_package(OpenSSL REQUIRED)

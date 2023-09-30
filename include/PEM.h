@@ -19,6 +19,7 @@ namespace ling {
     private:
         //根证书
         X509 *pCaCert = nullptr;
+        EVP_PKEY *pri = nullptr;
         //证书存储区
         X509_STORE *pCaCertStore = nullptr;
     protected:
@@ -28,11 +29,28 @@ namespace ling {
         void init(BIO *bio);
 
     public:
+
+        enum PrivatePemLockEnum {
+            lock,       //被密码保护
+            unlock,     //未被密码保护
+            error,      //私钥损坏
+            openError,  //打开私钥文件失败
+        };
+
         /**
          * @param rootPemPath               根证书路径
          * @throw PemException              出错时
          */
         explicit PEM(const std::string &rootPemPath);
+
+        explicit PEM(const std::string &rootPemPath, const std::string &priPath, const char *password = nullptr);
+
+        /**
+         * 检查私钥文件是否被密码保护
+         * @param path
+         * @return
+         */
+        static PrivatePemLockEnum isPrivatePemLock(const std::string &path);
 
         /**
          *

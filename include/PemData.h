@@ -8,22 +8,22 @@
 #include <openssl/x509v3.h>
 #include <string>
 #include <openssl/pem.h>
+#include "RSATool.h"
 
 namespace ling {
     /**
      * 证书数据
      */
-    class PemData {
+    class PemData : public RSATool {
     private:
-        //证书结构体，保存用户证书
-        X509 *pCert = nullptr;
+
     protected:
-        explicit PemData(X509 *pCert);
+        explicit PemData(X509 *pCert,EVP_PKEY *pri = nullptr);
 
     public:
         friend class PEM;
 
-        virtual ~PemData();
+        ~PemData() override;
     };
 
 } // ling

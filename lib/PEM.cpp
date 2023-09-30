@@ -2,8 +2,11 @@
 // Created by ling on 23-9-27.
 //
 
+#include <iostream>
 #include "PEM.h"
 #include "PemException.h"
+#include <openssl/err.h>
+#include <atomic>
 
 namespace ling {
     PEM::PEM(const std::string &rootPemPath) {
@@ -17,6 +20,29 @@ namespace ling {
             throw e;
         }
         BIO_free(pbio);
+    }
+
+    PEM::PEM(const std::string &rootPemPath, const std::string &priPath, const char *password) : PEM(rootPemPath) {
+        FILE *fp = fopen(priPath.c_str(), "r");
+        if (fp == nullptr) {
+            throw PemException("私钥无法访问");
+        }
+        EVP_PKEY *privateKey = nullptr;
+        privateKey = PEM_read_PrivateKey(fp, nullptr, [](char *buf, int size, int rwflag, void *u) -> int {
+            if (u == nullptr)
+                return 0;
+            int pass_size = strlen((const char *) u);
+            if (pass_size > size) {
+                pass_size = size;
+            }
+            memcpy(buf, (const void *) u, pass_size);
+            return pass_size;
+        }, (void *) password);
+        fclose(fp);
+        if (privateKey == nullptr) {
+            throw PemException("私钥损坏！");
+        }
+        pri = privateKey;
     }
 
     PEM::PEM(const char *ptr, size_t size) {
@@ -36,6 +62,7 @@ namespace ling {
         X509_free(pCaCert);
         X509_free(pCaCert);
         X509_STORE_free(pCaCertStore);
+        EVP_PKEY_free(pri);
     }
 
     void PEM::init(BIO *bio) {
@@ -108,7 +135,41 @@ namespace ling {
         } else {
             X509_STORE_CTX_cleanup(ctx);
             X509_STORE_CTX_free(ctx);
-            return std::shared_ptr<PemData>(new PemData(pCert));
+            auto temp = std::shared_ptr<PemData>(new PemData(pCert, pri));
+            X509_free(pCert);
+            return temp;
+        }
+    }
+
+    PEM::PrivatePemLockEnum PEM::isPrivatePemLock(const std::string &path) {
+        // 从私钥文件中读取私钥
+        EVP_PKEY *privateKey = nullptr;
+        FILE *privateKeyFile = fopen(path.c_str(), "r");
+
+        if (privateKeyFile == nullptr) {
+            std::cout << "无法打开私钥文件" << std::endl;
+            // 处理错误情况
+            return PrivatePemLockEnum::openError;
+        } else {
+            std::atomic<bool> flag = false;
+
+            privateKey = PEM_read_PrivateKey(privateKeyFile, nullptr, [](char *buf, int size, int rwflag, void *u) -> int {
+                ((std::atomic<bool> *) u)->store(true);
+                return 0;
+            }, &flag);
+            fclose(privateKeyFile);
+
+            if (flag.load()) {
+                return PrivatePemLockEnum::lock;
+            }
+
+            if (privateKey == nullptr) {
+                // 判断私钥是否被加密
+                return PrivatePemLockEnum::error;
+            } else {
+                EVP_PKEY_free(privateKey);
+                return PrivatePemLockEnum::unlock;
+            }
         }
     }
 } // ling
