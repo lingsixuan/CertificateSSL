@@ -11,14 +11,14 @@ int main(int argc, char **argv) {
     }
     OPENSSL_add_all_algorithms_noconf();
     try {
-        auto pem = ling::PEM(argv[2],"/home/ling/CA/private/CA.pem","intmainvoid");
+        auto pem = ling::PEM(argv[2],"/data/local/tmp/CA.pem","intmainvoid");
         auto rsa = pem.verifyUserPem(argv[1]);
         std::cout << "验证成功！" << std::endl;
     } catch (const std::runtime_error &e) {
         std::cout << e.what() << std::endl;
     }
 
-    switch (ling::PEM::isPrivatePemLock("/home/ling/CA/private/CA.pem")) {
+    switch (ling::PEM::isPrivatePemLock("/data/local/tmp/CA.pem")) {
 
         case ling::PEM::lock:
             std::cout << "锁定" << std::endl;
