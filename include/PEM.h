@@ -10,6 +10,8 @@
 #include <openssl/pem.h>
 #include <PemData.h>
 #include <memory>
+#include <vector>
+#include <unordered_map>
 
 namespace ling {
     /**
@@ -19,7 +21,6 @@ namespace ling {
     private:
         //根证书
         X509 *pCaCert = nullptr;
-        EVP_PKEY *pri = nullptr;
         //证书存储区
         X509_STORE *pCaCertStore = nullptr;
     protected:
@@ -43,7 +44,7 @@ namespace ling {
          */
         explicit PEM(const std::string &rootPemPath);
 
-        explicit PEM(const std::string &rootPemPath, const std::string &priPath, const char *password = nullptr);
+        //explicit PEM(const std::string &rootPemPath, const std::string &priPath, const char *password = nullptr);
 
         /**
          * 检查私钥文件是否被密码保护
@@ -72,6 +73,16 @@ namespace ling {
 
         /**
          * 验证用户证书
+         * @param pemPath                   用户证书路径
+         * @param priKeyPath                私钥文件路径
+         * @param priPassword               私钥密码
+         * @return                          用户证书信息
+         * @throw PemException               验证出错时
+         */
+        std::shared_ptr<PemData> verifyUserPem(const std::string &pemPath, const std::string &priKeyPath, const char *priPassword = nullptr);
+
+        /**
+         * 验证用户证书
          * @param ptr                       内存中的证书
          * @param size                      指针长度
          * @return                          用户证书信息
@@ -86,6 +97,8 @@ namespace ling {
          * @throw PemException              出错时
          */
         std::shared_ptr<PemData> verifyUserPem(BIO *bio);
+
+        static std::unordered_map<std::string, std::string> ParseSubject(const std::string &subject);
 
     };
 

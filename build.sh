@@ -26,5 +26,12 @@ cmake -Dtarget_platform=Linux -DCMAKE_BUILD_TYPE=Release ../../../
 make -j
 popd || exit
 
+#set(OPENSSL_ROOT_DIR /usr/local/windows/openssl)
+mkdir -p build/Windows/Release
+pushd build/Windows/Release || exit
+cmake -Dtarget_platform=Windows -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/windows/openssl ../../../
+make -j
+popd || exit
+
 echo "构建完毕"
 

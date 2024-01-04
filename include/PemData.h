@@ -16,14 +16,33 @@ namespace ling {
      */
     class PemData : public RSATool {
     private:
+        EVP_PKEY *pri;
+        EVP_PKEY *public_key;
+        std::string subject;
+        std::string issuer;
+        time_t startTime, endTime;
+
+        static time_t ASN1_to_Unix(ASN1_TIME *asn1);
 
     protected:
-        explicit PemData(X509 *pCert,EVP_PKEY *pri = nullptr);
+        explicit PemData(X509 *pCert, EVP_PKEY *pri = nullptr);
+
+        void setPri(EVP_PKEY *pri);
+
+        void initKey();
 
     public:
         friend class PEM;
 
         ~PemData() override;
+
+        [[nodiscard]] const std::string &getSubject() const;
+
+        [[nodiscard]] const std::string &getIssuer() const;
+
+        [[nodiscard]] time_t getStartTime() const;
+
+        [[nodiscard]] time_t getEndTime() const;
     };
 
 } // ling

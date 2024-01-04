@@ -22,7 +22,7 @@ namespace ling {
         BIO_free(pbio);
     }
 
-    PEM::PEM(const std::string &rootPemPath, const std::string &priPath, const char *password) : PEM(rootPemPath) {
+    /*PEM::PEM(const std::string &rootPemPath, const std::string &priPath, const char *password) : PEM(rootPemPath) {
         FILE *fp = fopen(priPath.c_str(), "r");
         if (fp == nullptr) {
             throw PemException("私钥无法访问");
@@ -43,7 +43,7 @@ namespace ling {
             throw PemException("私钥损坏！");
         }
         pri = privateKey;
-    }
+    }*/
 
     PEM::PEM(const char *ptr, size_t size) {
         BIO *pbio = nullptr;
@@ -62,7 +62,6 @@ namespace ling {
         X509_free(pCaCert);
         X509_free(pCaCert);
         X509_STORE_free(pCaCertStore);
-        EVP_PKEY_free(pri);
     }
 
     void PEM::init(BIO *bio) {
@@ -88,6 +87,7 @@ namespace ling {
             BIO_free(pbio);
             throw e;
         }
+        temp->initKey();
         BIO_free(pbio);
         return temp;
     }
@@ -103,6 +103,7 @@ namespace ling {
             BIO_free(pbio);
             throw e;
         }
+        temp->initKey();
         BIO_free(pbio);
         return temp;
     }
@@ -135,7 +136,7 @@ namespace ling {
         } else {
             X509_STORE_CTX_cleanup(ctx);
             X509_STORE_CTX_free(ctx);
-            auto temp = std::shared_ptr<PemData>(new PemData(pCert, pri));
+            auto temp = std::shared_ptr<PemData>(new PemData(pCert));
             X509_free(pCert);
             return temp;
         }
@@ -172,4 +173,75 @@ namespace ling {
             }
         }
     }
+
+    std::shared_ptr<PemData> PEM::verifyUserPem(const std::string &pemPath, const std::string &priKeyPath, const char *password) {
+        BIO *pbio = nullptr;
+        pbio = BIO_new_file(pemPath.c_str(), "r");
+        std::shared_ptr<PemData> temp;
+        try {
+            temp = verifyUserPem(pbio);
+        } catch (const std::runtime_error &e) {
+            BIO_free(pbio);
+            throw e;
+        }
+
+        FILE *fp = fopen(priKeyPath.c_str(), "r");
+        if (fp == nullptr) {
+            throw PemException("私钥无法访问");
+        }
+        EVP_PKEY *privateKey = nullptr;
+
+        privateKey = PEM_read_PrivateKey(fp, nullptr, [](char *buf, int size, int rwflag, void *u) -> int {
+            if (u == nullptr) {
+                return 0;
+            }
+            int pass_size = strlen((const char *) u);
+            if (pass_size > size) {
+                pass_size = size;
+            }
+            memcpy(buf, (const void *) u, pass_size);
+            return pass_size;
+        }, (void *) password);
+
+        fclose(fp);
+        if (privateKey == nullptr) {
+            throw PemException("私钥损坏！");
+        }
+
+        temp->setPri(privateKey);
+        temp->initKey();
+        EVP_PKEY_free(privateKey);
+
+        BIO_free(pbio);
+        return temp;
+    }
+
+    // 函数用于解析主题字段中的各个字段
+    std::unordered_map<std::string, std::string> PEM::ParseSubject(const std::string& subject) {
+        std::unordered_map<std::string,std::string> map;
+
+        // 使用 '/' 作为分隔符将主题字段拆分为不同的字段
+        size_t pos = 0;
+        while (pos < subject.length()) {
+            size_t end = subject.find('/', pos);
+            if (end == std::string::npos) {
+                end = subject.length();
+            }
+
+            std::string field = subject.substr(pos, end - pos);
+
+            // 将字段分为键值对，以 '=' 分隔
+            size_t equalPos = field.find('=');
+            if (equalPos != std::string::npos) {
+                std::string key = field.substr(0, equalPos);
+                std::string value = field.substr(equalPos + 1);
+                map[key] = value;
+            }
+
+            pos = end + 1; // 移动到下一个字段的起始位置
+        }
+
+        return map;
+    }
+
 } // ling

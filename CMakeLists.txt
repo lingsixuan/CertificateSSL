@@ -23,13 +23,30 @@ add_executable(CertificateSSL
         )
 set_target_properties(CertificateSSL_static PROPERTIES OUTPUT_NAME CertificateSSL)
 
+target_link_libraries(CertificateSSL CertificateSSL_static)
+
 if (${target_platform} STREQUAL "Linux")
     find_package(OpenSSL REQUIRED)
     include_directories(${OPENSSL_INCLUDE_DIR})
     find_package(CURL REQUIRED)
     include_directories(${CURL_INCLUDE_DIRS})
     target_link_libraries(CertificateSSL_static ${CURL_LIBRARIES} OpenSSL::SSL OpenSSL::Crypto)
-    target_link_libraries(CertificateSSL CertificateSSL_static)
+elseif (${target_platform} STREQUAL "Windows")
+    add_compile_definitions(WINDOWS_BUILD)
+    set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
+    set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
+    message("变量：${OPENSSL_ROOT_DIR}")
+    set(OPENSSL_CRYPTO_LIBRARY ${OPENSSL_ROOT_DIR}/lib64/libcrypto.lib)
+    set(OPENSSL_SSL_LIBRARY ${OPENSSL_ROOT_DIR}/lib64/libssl.lib)
+    set(OPENSSL_LIBRARIES_DIR ${OPENSSL_ROOT_DIR}/lib64)
+    include_directories(${OPENSSL_ROOT_DIR}/include)
+    set(OPENSSL_USE_STATIC_LIBS TRUE)
+    target_link_libraries(
+            CertificateSSL_static
+            ${OPENSSL_CRYPTO_LIBRARY}
+            ${OPENSSL_SSL_LIBRARY}
+    )
+
 elseif (${target_platform} STREQUAL "Android")
     set(CMAKE_SYSTEM_NAME Android)
     set(CMAKE_SYSTEM_VERSION 23) # API level
@@ -82,11 +99,6 @@ elseif (${target_platform} STREQUAL "Android")
             PRIVATE
             ssl
             crypto
-            )
-
-    target_link_libraries( # Specifies the target library.
-            CertificateSSL
-            CertificateSSL_static
             )
 else ()
     message("TARGET_PLATFORM: ${target_platform}")
