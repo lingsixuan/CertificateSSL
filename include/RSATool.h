@@ -38,13 +38,13 @@ public:
 
     int getKeyBitSize();
 
-    int 公钥加密(int size, const unsigned char *in, unsigned char *out);
+    int lockPublicKey(int size, const unsigned char *in, unsigned char *out);
 
-    int 公钥解密(int size, const unsigned char *in, unsigned char *out);
+    int unlockPublicKey(int size, const unsigned char *in, unsigned char *out);
 
-    int 私钥加密(int size, const unsigned char *in, unsigned char *out);
+    int lockPrivateKey(int size, const unsigned char *in, unsigned char *out);
 
-    int 私钥解密(int size, const unsigned char *in, unsigned char *out);
+    int unlockPrivateKey(int size, const unsigned char *in, unsigned char *out);
 
 };
 

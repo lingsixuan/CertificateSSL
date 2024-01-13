@@ -74,22 +74,22 @@ int RSATool::getKeyBitSize() {
     return RSA_size(this->key) * 8;
 }
 
-int RSATool::公钥加密(int size, const unsigned char *in, unsigned char *out) {
+int RSATool::lockPublicKey(int size, const unsigned char *in, unsigned char *out) {
     std::unique_lock<std::mutex> lock(mutex);
     return RSA_public_encrypt(size, in, out, key, RSA_PKCS1_PADDING);
 }
 
-int RSATool::公钥解密(int size, const unsigned char *in, unsigned char *out) {
+int RSATool::unlockPublicKey(int size, const unsigned char *in, unsigned char *out) {
     std::unique_lock<std::mutex> lock(mutex);
     return RSA_public_decrypt(size, in, out, key, RSA_PKCS1_PADDING);
 }
 
-int RSATool::私钥加密(int size, const unsigned char *in, unsigned char *out) {
+int RSATool::lockPrivateKey(int size, const unsigned char *in, unsigned char *out) {
     std::unique_lock<std::mutex> lock(mutex);
     return RSA_private_encrypt(size, in, out, key, RSA_PKCS1_PADDING);
 }
 
-int RSATool::私钥解密(int size, const unsigned char *in, unsigned char *out) {
+int RSATool::unlockPrivateKey(int size, const unsigned char *in, unsigned char *out) {
     std::unique_lock<std::mutex> lock(mutex);
     return RSA_private_decrypt(size, in, out, key, RSA_PKCS1_PADDING);
 }
