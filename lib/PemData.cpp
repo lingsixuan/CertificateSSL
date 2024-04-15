@@ -3,6 +3,8 @@
 //
 
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include "PemData.h"
 #include "RSATool.h"
 #include "PemException.h"
@@ -50,7 +52,28 @@ namespace ling {
         //BN_free(bnSerial);
         //free(serialString);
 
-
+        {
+            unsigned char sha256[SHA256_DIGEST_LENGTH];
+            X509_digest(pCert, EVP_sha256(), sha256, nullptr);
+            std::stringstream stream;
+            for (int i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
+                stream << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << (int) sha256[i];
+                if (i < SHA256_DIGEST_LENGTH - 1)
+                    stream << ":";
+            }
+            this->sha256 = stream.str();
+        }
+        {
+            unsigned char sha1[SHA_DIGEST_LENGTH];
+            X509_digest(pCert, EVP_sha1(), sha1, NULL);
+            std::stringstream stream;
+            for (int i = 0; i < SHA_DIGEST_LENGTH; ++i) {
+                stream << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << (int) sha1[i];
+                if (i < SHA_DIGEST_LENGTH - 1)
+                    stream << ":";
+            }
+            this->sha1 = stream.str();
+        }
     }
 
     PemData::~PemData() {
@@ -121,6 +144,14 @@ namespace ling {
 
     std::string PemData::getNumber() {
         return this->number;
+    }
+
+    const std::string &PemData::getSha256() const {
+        return this->sha256;
+    }
+
+    const std::string &PemData::getSha1() const {
+        return this->sha1;
     }
 
 

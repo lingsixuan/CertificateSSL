@@ -15,6 +15,8 @@ int main(int argc, char **argv) {
         auto rsa = pem.verifyUserPem(argv[1]);
         std::cout << "验证成功！" << std::endl;
         std::cout << "序列号：" << rsa->getNumber() << std::endl;
+        std::cout << "SHA-256：" << rsa->getSha256() << std::endl;
+        std::cout << "SHA-1：" << rsa->getSha1() << std::endl;
     } catch (const std::runtime_error &e) {
         std::cout << e.what() << std::endl;
     }

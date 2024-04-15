@@ -23,6 +23,8 @@ namespace ling {
         time_t startTime, endTime;
         //序列号
         std::string number;
+        std::string sha1;
+        std::string sha256;
 
         static time_t ASN1_to_Unix(ASN1_TIME *asn1);
 
@@ -47,6 +49,10 @@ namespace ling {
         [[nodiscard]] time_t getEndTime() const;
 
         [[nodiscard]] std::string getNumber();
+
+        [[nodiscard]] const std::string &getSha1() const;
+
+        [[nodiscard]] const std::string &getSha256() const;
     };
 
 } // ling
