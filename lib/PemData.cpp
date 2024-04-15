@@ -21,12 +21,14 @@ namespace ling {
         char subject_name[256];
         X509_NAME_oneline(subject, subject_name, sizeof(subject_name));
         this->subject = subject_name;
+        //X509_NAME_free(subject);
 
         // 获取证书颁发者信息
         X509_NAME *issuer = X509_get_issuer_name(pCert);
         char issuer_name[256];
         X509_NAME_oneline(issuer, issuer_name, sizeof(issuer_name));
         this->issuer = issuer_name;
+        //X509_NAME_free(issuer);
 
         // 获取证书有效期
         ASN1_TIME *not_before = X509_get_notBefore(pCert);
@@ -34,6 +36,21 @@ namespace ling {
         //printf("证书有效期: %s 到 %s\n", not_before->data, not_after->data);
         this->startTime = ASN1_to_Unix(not_before);
         this->endTime = ASN1_to_Unix(not_after);
+        //ASN1_TIME_free(not_before);
+        //ASN1_TIME_free(not_after);
+
+        //获取证书序列号
+        ASN1_INTEGER *serial = X509_get_serialNumber(pCert);
+        // 将 ASN1_INTEGER 转换为 BIGNUM
+        BIGNUM *bnSerial = ASN1_INTEGER_to_BN(serial, nullptr);
+        //ASN1_INTEGER_free(serial);
+        // 将 BIGNUM 转换为十六进制字符串
+        char *serialString = BN_bn2hex(bnSerial);
+        this->number = serialString;
+        //BN_free(bnSerial);
+        //free(serialString);
+
+
     }
 
     PemData::~PemData() {
@@ -100,6 +117,10 @@ namespace ling {
 
     time_t PemData::getEndTime() const {
         return this->endTime;
+    }
+
+    std::string PemData::getNumber() {
+        return this->number;
     }
 
 

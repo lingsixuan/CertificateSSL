@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
         auto pem = ling::PEM(argv[2]);
         auto rsa = pem.verifyUserPem(argv[1]);
         std::cout << "验证成功！" << std::endl;
+        std::cout << "序列号：" << rsa->getNumber() << std::endl;
     } catch (const std::runtime_error &e) {
         std::cout << e.what() << std::endl;
     }

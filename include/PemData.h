@@ -21,6 +21,8 @@ namespace ling {
         std::string subject;
         std::string issuer;
         time_t startTime, endTime;
+        //序列号
+        std::string number;
 
         static time_t ASN1_to_Unix(ASN1_TIME *asn1);
 
@@ -43,6 +45,8 @@ namespace ling {
         [[nodiscard]] time_t getStartTime() const;
 
         [[nodiscard]] time_t getEndTime() const;
+
+        [[nodiscard]] std::string getNumber();
     };
 
 } // ling
